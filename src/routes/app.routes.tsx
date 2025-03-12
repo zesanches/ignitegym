@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import {
   createBottomTabNavigator,
   BottomTabNavigationProp,
@@ -14,7 +14,7 @@ import { gluestackUIConfig } from "../../config/gluestack-ui.config";
 
 type AppRoutes = {
   home: undefined;
-  History: undefined;
+  history: undefined;
   profile: undefined;
   exercise: undefined;
 };
@@ -56,7 +56,7 @@ export const AppRoutes = () => {
         }}
       />
       <Screen
-        name="History"
+        name="history"
         component={History}
         options={{
           tabBarIcon: ({ color }) => (
