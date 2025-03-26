@@ -8,6 +8,7 @@ import {
   Text,
   Heading,
   ScrollView,
+  useToast,
 } from "@gluestack-ui/themed";
 import { yupResolver } from "@hookform/resolvers/yup";
 import BackgroundImage from "@assets/background.png";
@@ -15,6 +16,11 @@ import Logo from "@assets/logo.svg";
 import { Input } from "@components/Input";
 import { Button } from "@components/Button";
 import { AuthNavigatorRoutesProps } from "@routes/auth.routes";
+import { api } from "@services/api";
+import { AppError } from "@utils/AppError";
+import { ToastMessage } from "@components/ToastMessage";
+import { useState } from "react";
+import { useAuth } from "@hooks/useAuth";
 
 type FormDataProps = {
   name: string;
@@ -37,6 +43,8 @@ const signUpSchema = yup.object({
 });
 
 export function SignUp() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
   const {
     control,
     handleSubmit,
@@ -45,15 +53,40 @@ export function SignUp() {
     resolver: yupResolver(signUpSchema),
   });
   const navigation = useNavigation<AuthNavigatorRoutesProps>();
+  const toast = useToast();
 
   function handleBackToLogin() {
     navigation.navigate("signIn");
   }
 
-  console.log(errors);
+  async function handleSignUp({ email, name, password }: FormDataProps) {
+    try {
+      setIsLoading(true);
 
-  function handleSignUp(data: FormDataProps) {
-    // console.log(data);
+      await api.post("/users", { name, email, password });
+      await signIn(email, password);
+    } catch (error) {
+      setIsLoading(false);
+
+      const isAppError = error instanceof AppError;
+      const title = isAppError
+        ? error.message
+        : "Não foi possível criar a conta. Tente novamente mais tarde.";
+
+      toast.show({
+        placement: "top",
+        render: ({ id }) => {
+          return (
+            <ToastMessage
+              title={title}
+              id={id}
+              type="error"
+              onClose={() => toast.close(id)}
+            />
+          );
+        },
+      });
+    }
   }
 
   return (
@@ -142,6 +175,7 @@ export function SignUp() {
             <Button
               title="Criar e Acessar"
               onPress={handleSubmit(handleSignUp)}
+              isLoading={isLoading}
             />
           </Center>
 
